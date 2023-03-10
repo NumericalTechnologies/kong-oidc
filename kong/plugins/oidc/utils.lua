@@ -80,6 +80,7 @@ function M.get_options(config, ngx)
     groups_claim = config.groups_claim,
     skip_already_auth_requests = config.skip_already_auth_requests == "yes",
     bearer_jwt_auth_enable = config.bearer_jwt_auth_enable == "yes",
+    bearer_jwt_auth_types = config.bearer_jwt_auth_types,
     bearer_jwt_auth_allowed_auds = config.bearer_jwt_auth_allowed_auds,
     bearer_jwt_auth_signing_algs = config.bearer_jwt_auth_signing_algs,
     header_names = config.header_names or {},
@@ -197,6 +198,17 @@ function M.has_bearer_access_token()
     end
   end
   return false
+end
+
+function M.get_bearer_access_token()
+  local header = ngx.req.get_headers()['Authorization']
+  if header and header:find(" ") then
+    local divider = header:find(' ')
+    if string.lower(header:sub(0, divider-1)) == string.lower("Bearer") then
+      return header:sub(divider+1)
+    end
+  end
+  return ""
 end
 
 -- verify if tables t1 and t2 have at least one common string item

@@ -254,6 +254,19 @@ return {
             }
           },
           {
+            bearer_jwt_auth_types = {
+              type = "array",
+              required = false,
+              elements = {
+                type = "string"
+              },
+              default = {
+                "url",
+                "header"
+              }
+            }
+          },
+          {
             bearer_jwt_auth_allowed_auds = {
               type = "array",
               required = false,

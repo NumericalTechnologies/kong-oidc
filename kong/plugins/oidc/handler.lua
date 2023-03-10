@@ -6,7 +6,6 @@ local utils = require("kong.plugins.oidc.utils")
 local filter = require("kong.plugins.oidc.filter")
 local session = require("kong.plugins.oidc.session")
 
-
 function OidcHandler:access(config)
   local oidcConfig = utils.get_options(config, ngx)
 
@@ -32,7 +31,20 @@ function handle(oidcConfig)
   local response
 
   if oidcConfig.bearer_jwt_auth_enable then
-    response = verify_bearer_jwt(oidcConfig)
+
+    if type(oidcConfig.bearer_jwt_auth_types) == 'table' then
+      for _, value in pairs(oidcConfig.bearer_jwt_auth_types) do
+        if value == "url" then
+          response = verify_bearer_jwt_url(oidcConfig)
+        elseif value == "header" then
+          response = verify_bearer_jwt_header(oidcConfig)
+        end
+        if response then
+          break
+        end
+      end
+    end
+
     if response then
       utils.setCredentials(response)
       utils.injectGroups(response, oidcConfig.groups_claim)
@@ -144,10 +156,7 @@ function introspect(oidcConfig)
   return nil
 end
 
-function verify_bearer_jwt(oidcConfig)
-  if not utils.has_bearer_access_token() then
-    return nil
-  end
+function verify_jwt(jwtToken, oidcConfig)
   -- setup controlled configuration for bearer_jwt_verify
   local opts = {
     accept_none_alg = false,
@@ -179,13 +188,31 @@ function verify_bearer_jwt(oidcConfig)
     nbf = jwt_validators.opt_is_not_before(),
   }
 
-  local json, err, token = require("resty.openidc").bearer_jwt_verify(opts, claim_spec)
+  local json, err = require("resty.openidc").jwt_verify(jwtToken, opts, claim_spec)
   if err then
     kong.log.err('Bearer JWT verify failed: ' .. err)
     return nil
   end
 
   return json
+end
+
+function verify_bearer_jwt_url(oidcConfig)
+  local uri = ngx.var.request_uri
+  for k, v in string.gmatch(uri, "?(.+)=(.+)") do
+    if k == "token" then
+      return verify_jwt(v, oidcConfig)
+    end
+  end
+  return nil
+end
+
+
+function verify_bearer_jwt_header(oidcConfig)
+  if not utils.has_bearer_access_token() then
+    return nil
+  end
+  return verify_jwt(utils.get_bearer_access_token(), oidcConfig)
 end
 
 return OidcHandler
