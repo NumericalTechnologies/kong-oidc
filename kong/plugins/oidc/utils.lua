@@ -177,7 +177,11 @@ function M.injectHeaders(header_names, header_claims, sources)
       local source
       source = sources[j]
       if (source and source[claim]) then
-        kong.service.request.set_header(header, source[claim])
+        if type(source[claim]) == 'table' then
+          kong.service.request.set_header(header, cjson.encode(source[claim]))
+        else
+          kong.service.request.set_header(header, source[claim])
+        end
         break
       end
     end
