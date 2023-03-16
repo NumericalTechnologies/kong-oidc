@@ -29,20 +29,25 @@ end
 
 function handle(oidcConfig)
   local response
-
   if oidcConfig.bearer_jwt_auth_enable then
 
+    local passed
     if type(oidcConfig.bearer_jwt_auth_types) == 'table' then
       for _, value in pairs(oidcConfig.bearer_jwt_auth_types) do
         if value == "url" then
-          response = verify_bearer_jwt_url(oidcConfig)
+          passed, response = pcall(verify_bearer_jwt_url, oidcConfig)
         elseif value == "header" then
-          response = verify_bearer_jwt_header(oidcConfig)
+          passed, response = pcall(verify_bearer_jwt_header, oidcConfig)
         end
-        if response then
+
+        if passed and response then
           break
         end
       end
+    end
+
+    if not passed then
+      return kong.response.exit(ngx.HTTP_UNAUTHORIZED, { message = response })
     end
 
     if response then
@@ -190,8 +195,9 @@ function verify_jwt(jwtToken, oidcConfig)
 
   local json, err = require("resty.openidc").jwt_verify(jwtToken, opts, claim_spec)
   if err then
-    kong.log.err('Bearer JWT verify failed: ' .. err)
-    return nil
+    local error_message = 'Bearer JWT verify failed: ' .. err
+    kong.log.err(error_message)
+    error(error_message)
   end
 
   return json
