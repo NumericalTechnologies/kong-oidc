@@ -197,7 +197,7 @@ function verify_jwt(jwtToken, oidcConfig)
   if err then
     local error_message = 'Bearer JWT verify failed: ' .. err
     kong.log.err(error_message)
-    error(error_message)
+    error(error_message, 0)
   end
 
   return json
