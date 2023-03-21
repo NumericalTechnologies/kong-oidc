@@ -261,7 +261,6 @@ return {
                 type = "string"
               },
               default = {
-                "url",
                 "header"
               }
             }
