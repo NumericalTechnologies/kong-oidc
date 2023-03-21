@@ -29,17 +29,17 @@ end
 
 function handle(oidcConfig)
   local response
-  if oidcConfig.bearer_jwt_auth_enable then
+  if oidcConfig.jwt_auth_enable then
 
     local passed
-    if type(oidcConfig.bearer_jwt_auth_types) == 'table' then
-      for _, value in pairs(oidcConfig.bearer_jwt_auth_types) do
+    if type(oidcConfig.jwt_auth_types) == 'table' then
+      for _, value in pairs(oidcConfig.jwt_auth_types) do
         if value == "cookie" then
           passed, response = pcall(verify_jwt_cookie, oidcConfig)
         elseif value == "url" then
           passed, response = pcall(verify_jwt_url, oidcConfig)
         elseif value == "header" then
-          passed, response = pcall(verify_bearer_jwt_header, oidcConfig)
+          passed, response = pcall(verify_jwt_header, oidcConfig)
         end
 
         if passed and response then
@@ -164,11 +164,11 @@ function introspect(oidcConfig)
 end
 
 function verify_jwt(jwtToken, oidcConfig)
-  -- setup controlled configuration for bearer_jwt_verify
+  -- setup controlled configuration for jwt_verify
   local opts = {
     accept_none_alg = false,
     accept_unsupported_alg = false,
-    token_signing_alg_values_expected = oidcConfig.bearer_jwt_auth_signing_algs,
+    token_signing_alg_values_expected = oidcConfig.jwt_auth_signing_algs,
     discovery = oidcConfig.discovery,
     timeout = oidcConfig.timeout,
     ssl_verify = oidcConfig.ssl_verify
@@ -180,7 +180,7 @@ function verify_jwt(jwtToken, oidcConfig)
     return nil
   end
 
-  local allowed_auds = oidcConfig.bearer_jwt_auth_allowed_auds or oidcConfig.client_id
+  local allowed_auds = oidcConfig.jwt_auth_allowed_auds or oidcConfig.client_id
 
   local jwt_validators = require "resty.jwt-validators"
   jwt_validators.set_system_leeway(120)
@@ -207,7 +207,7 @@ end
 
 function verify_jwt_cookie(oidcConfig)
   local cookie_header = ngx.req.get_headers()['Cookie']
-  local cookie_name = oidcConfig.bearer_jwt_auth_cookie_name
+  local cookie_name = oidcConfig.jwt_auth_cookie_name
   if cookie_header:len() == 0 or cookie_name:len() == 0 then
     return nil
   end
@@ -231,7 +231,7 @@ function verify_jwt_url(oidcConfig)
 end
 
 
-function verify_bearer_jwt_header(oidcConfig)
+function verify_jwt_header(oidcConfig)
   if not utils.has_bearer_access_token() then
     return nil
   end

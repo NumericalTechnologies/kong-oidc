@@ -79,11 +79,11 @@ function M.get_options(config, ngx)
     disable_access_token_header = config.disable_access_token_header == "yes",
     groups_claim = config.groups_claim,
     skip_already_auth_requests = config.skip_already_auth_requests == "yes",
-    bearer_jwt_auth_enable = config.bearer_jwt_auth_enable == "yes",
-    bearer_jwt_auth_types = config.bearer_jwt_auth_types,
-    bearer_jwt_auth_cookie_name = config.bearer_jwt_auth_cookie_name,
-    bearer_jwt_auth_allowed_auds = config.bearer_jwt_auth_allowed_auds,
-    bearer_jwt_auth_signing_algs = config.bearer_jwt_auth_signing_algs,
+    jwt_auth_enable = config.jwt_auth_enable == "yes",
+    jwt_auth_types = config.jwt_auth_types,
+    jwt_auth_cookie_name = config.jwt_auth_cookie_name,
+    jwt_auth_allowed_auds = config.jwt_auth_allowed_auds,
+    jwt_auth_signing_algs = config.jwt_auth_signing_algs,
     header_names = config.header_names or {},
     header_claims = config.header_claims or {}
   }

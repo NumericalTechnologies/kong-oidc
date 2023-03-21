@@ -247,14 +247,14 @@ return {
             }
           },
           {
-            bearer_jwt_auth_enable = {
+            jwt_auth_enable = {
               type = "string",
               required = false,
               default = "no"
             }
           },
           {
-            bearer_jwt_auth_types = {
+            jwt_auth_types = {
               type = "array",
               required = false,
               elements = {
@@ -266,7 +266,7 @@ return {
             }
           },
           {
-            bearer_jwt_auth_allowed_auds = {
+            jwt_auth_allowed_auds = {
               type = "array",
               required = false,
               elements = {
@@ -275,7 +275,7 @@ return {
             }
           },
           {
-            bearer_jwt_auth_signing_algs = {
+            jwt_auth_signing_algs = {
               type = "array",
               required = true,
               elements = {
@@ -287,7 +287,7 @@ return {
             }
           },
           {
-            bearer_jwt_auth_cookie_name = {
+            jwt_auth_cookie_name = {
               type = "string",
               required = false,
               default = ""
