@@ -35,7 +35,7 @@ function handle(oidcConfig)
     if type(oidcConfig.bearer_jwt_auth_types) == 'table' then
       for _, value in pairs(oidcConfig.bearer_jwt_auth_types) do
         if value == "url" then
-          passed, response = pcall(verify_bearer_jwt_url, oidcConfig)
+          passed, response = pcall(verify_jwt_url, oidcConfig)
         elseif value == "header" then
           passed, response = pcall(verify_bearer_jwt_header, oidcConfig)
         end
@@ -203,7 +203,7 @@ function verify_jwt(jwtToken, oidcConfig)
   return json
 end
 
-function verify_bearer_jwt_url(oidcConfig)
+function verify_jwt_url(oidcConfig)
   local uri = ngx.var.request_uri
   for k, v in string.gmatch(uri, "?(.+)=(.+)") do
     if k == "token" then
