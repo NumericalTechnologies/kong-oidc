@@ -34,7 +34,9 @@ function handle(oidcConfig)
     local passed
     if type(oidcConfig.bearer_jwt_auth_types) == 'table' then
       for _, value in pairs(oidcConfig.bearer_jwt_auth_types) do
-        if value == "url" then
+        if value == "cookie" then
+          passed, response = pcall(verify_jwt_cookie, oidcConfig)
+        elseif value == "url" then
           passed, response = pcall(verify_jwt_url, oidcConfig)
         elseif value == "header" then
           passed, response = pcall(verify_bearer_jwt_header, oidcConfig)
@@ -201,6 +203,21 @@ function verify_jwt(jwtToken, oidcConfig)
   end
 
   return json
+end
+
+function verify_jwt_cookie(oidcConfig)
+  local cookie_header = ngx.req.get_headers()['Cookie']
+  local cookie_name = oidcConfig.bearer_jwt_auth_cookie_name
+  if cookie_header:len() == 0 or cookie_name:len() == 0 then
+    return nil
+  end
+
+  for k, v in string.gmatch(cookie_header .. "; ", "(.-)=(.-); ") do
+    if k == cookie_name then
+      return verify_jwt(v, oidcConfig)
+    end
+  end
+  return nil
 end
 
 function verify_jwt_url(oidcConfig)

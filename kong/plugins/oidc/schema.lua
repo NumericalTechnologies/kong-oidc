@@ -288,6 +288,13 @@ return {
             }
           },
           {
+            bearer_jwt_auth_cookie_name = {
+              type = "string",
+              required = false,
+              default = ""
+            }
+          },
+          {
             header_names = {
               type = "array",
               required = true,
