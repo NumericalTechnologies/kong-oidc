@@ -289,8 +289,7 @@ return {
           {
             jwt_auth_cookie_name = {
               type = "string",
-              required = false,
-              default = ""
+              required = false
             }
           },
           {

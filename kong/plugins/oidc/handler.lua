@@ -207,8 +207,12 @@ end
 
 function verify_jwt_cookie(oidcConfig)
   local cookie_header = ngx.req.get_headers()['Cookie']
+  if cookie_header:len() == 0 then
+    return nil
+  end
+
   local cookie_name = oidcConfig.jwt_auth_cookie_name
-  if cookie_header:len() == 0 or cookie_name:len() == 0 then
+  if type(cookie_name) ~= "string" or cookie_name:len() == 0 then
     return nil
   end
 
