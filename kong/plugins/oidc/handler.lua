@@ -1,5 +1,5 @@
 local OidcHandler = {
-  VERSION = "1.3.0",
+  VERSION = "1.4.0",
   PRIORITY = 1029,
 }
 local utils = require("kong.plugins.oidc.utils")
@@ -32,16 +32,23 @@ function handle(oidcConfig)
   if oidcConfig.jwt_auth_enable then
     local passed
     if type(oidcConfig.jwt_auth_types) == 'table' then
+      local access_token
       for _, value in pairs(oidcConfig.jwt_auth_types) do
         if value == "cookie" then
-          passed, response = pcall(verify_jwt_cookie, oidcConfig)
+          passed, response, access_token = pcall(verify_jwt_cookie, oidcConfig)
         elseif value == "url" then
-          passed, response = pcall(verify_jwt_url, oidcConfig)
+          passed, response, access_token = pcall(verify_jwt_url, oidcConfig)
         elseif value == "header" then
-          passed, response = pcall(verify_jwt_header, oidcConfig)
+          passed, response, access_token = pcall(verify_jwt_header, oidcConfig)
         end
 
         if passed and response then
+          if (not oidcConfig.disable_access_token_header
+                and access_token) then
+            utils.injectAccessToken(access_token, oidcConfig.access_token_header_name,
+              oidcConfig.access_token_as_bearer)
+          end
+
           break
         end
       end
@@ -218,7 +225,7 @@ function verify_jwt_cookie(oidcConfig)
 
   for k, v in string.gmatch(cookie_header .. "; ", "(.-)=(.-); ") do
     if k == cookie_name then
-      return verify_jwt(v, oidcConfig)
+      return verify_jwt(v, oidcConfig), v
     end
   end
   return nil
@@ -228,7 +235,7 @@ function verify_jwt_url(oidcConfig)
   local uri = ngx.var.request_uri
   for k, v in string.gmatch(uri, "([^&=?]-)=([^&=?]+)") do
     if k == "token" then
-      return verify_jwt(v, oidcConfig)
+      return verify_jwt(v, oidcConfig), v
     end
   end
   return nil
@@ -238,7 +245,7 @@ function verify_jwt_header(oidcConfig)
   if not utils.has_bearer_access_token() then
     return nil
   end
-  return verify_jwt(utils.get_bearer_access_token(), oidcConfig)
+  return verify_jwt(utils.get_bearer_access_token(), oidcConfig), utils.get_bearer_access_token()
 end
 
 return OidcHandler
